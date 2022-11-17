@@ -8,12 +8,15 @@ import tokensJsonAvax from "../../config/tokensAvax.json"
 import AVAXLogo from "../../images/tokenimg/avax.png"
 import STLogo from "../../images/tokenimg/snowtracelogo.svg";
 import Cog from "../../images/tokenimg/cog-wheel.png";
+import Approve from "../Approve";
+import {ethers} from "ethers"
+
 
 export default function Swap() {
   const AvaxAPI = process.env.REACT_APP_INFURA_ID
   const [fromToken, setFromToken] = useState("");
   const [toToken, setToToken] = useState("");
-  const [value, setValue] = useState("1000000000000000000");
+  const [value, setValue] = useState("10000000000000000");
   const [valueExchanged, setValueExchanged] = useState("");
   const [valueExchangedDecimals, setValueExchangedDecimals] = useState(1e18);
   const [to, setTo] = useState("");
@@ -37,17 +40,23 @@ export default function Swap() {
 
   const { data, isLoading, isSuccess, sendTransaction } = useSendTransaction({
     request: {
-      from: walletAddress,
+      from: String(walletAddress),
       to: String(to),
       data: String(txData),
       value: String(value),
     },
   });
 
+  // balance of avax = 1433637211830620964
+  // value of token swap = 5000000000000000000
+  // value of token swap = 50000000000000000
+  // supplied gas = 4010499
 
   async function get1inchSwap() {
     const tx = await axios.get(
-      `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${value}&fromAddress=${walletAddress}&slippage=1&disableEstimate=true`
+      // `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${value}&fromAddress=${walletAddress}&slippage=1&disableEstimate=false&gasPrice=25000000001`
+      `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=0x7761E2338B35bCEB6BdA6ce477EF012bde7aE611&toTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&amount=10000000000000000&fromAddress=0x127caE3A536527db86F583E97B4af51A1ECacc84&slippage=1&disableEstimate=false
+      `
       );
       console.log(tx.data);
       setTo(tx.data.tx.to);
@@ -77,8 +86,6 @@ export default function Swap() {
     setValue(e.target.value * 1e18);
     setValueExchanged("");
   }
-
-
 
   const handleListShow = () => {
     setListShow(!listShow);
@@ -200,10 +207,11 @@ export default function Swap() {
 
           <div className="button-containers">
             <button className="conversion-btn" onClick={get1inchSwap}>
-              Get Conversion
+              1 - Get Conversion
             </button>
+            <button className="approve-btn" onClick={Approve}>2 - Approve Token</button>
             <button className="swap-btn" disabled={false} onClick={sendTransaction}>
-              Swap Tokens
+              3 - Swap Tokens
             </button>
           </div>
         </div>

@@ -49,7 +49,6 @@ export default function App() {
         <ConnectKitProvider>
           <div className="App">
             <Swap />
-            {/* <Exchange /> */}
           </div>
         </ConnectKitProvider>
       </WagmiConfig>
