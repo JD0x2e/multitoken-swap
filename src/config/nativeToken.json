@@ -1,0 +1,9 @@
+[
+  {
+    "name": "Avalanche",
+    "symbol": "AVAX",
+    "decimals": 18,
+    "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+    "logoURI": "http://localhost:3000/tokenimg/avax.png"
+  }
+]
