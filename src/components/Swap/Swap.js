@@ -8,7 +8,6 @@ import tokensJsonAvax from "../../config/tokensAvax.json"
 import AVAXLogo from "../../images/tokenimg/avax.png"
 import STLogo from "../../images/tokenimg/snowtracelogo.svg";
 import Cog from "../../images/tokenimg/cog-wheel.png";
-import Approve from "../Approve";
 import {ethers} from "ethers"
 
 
@@ -16,7 +15,7 @@ export default function Swap() {
   const AvaxAPI = process.env.REACT_APP_INFURA_ID
   const [fromToken, setFromToken] = useState("");
   const [toToken, setToToken] = useState("");
-  const [value, setValue] = useState("10000000000000000");
+  const [value, setValue] = useState("1000000000000000000");
   const [valueExchanged, setValueExchanged] = useState("");
   const [valueExchangedDecimals, setValueExchangedDecimals] = useState(1e18);
   const [to, setTo] = useState("");
@@ -25,6 +24,7 @@ export default function Swap() {
   const [listShow, setListShow] = useState(false);
   const [listShow2, setListShow2] = useState(false);
   const [modalShow, setModalShow] = useState(false);
+  const [swapApproved, setSwapApproved] = useState(false);
 
   useEffect(() => {
     getBalance();
@@ -43,28 +43,45 @@ export default function Swap() {
       from: String(walletAddress),
       to: String(to),
       data: String(txData),
-      value: String(value),
+      value: 0,
     },
   });
 
-  // balance of avax = 1433637211830620964
-  // value of token swap = 5000000000000000000
-  // value of token swap = 50000000000000000
-  // supplied gas = 4010499
 
+  async function getConversion() {
+    const tx = await axios.get(
+      `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${value}&fromAddress=${walletAddress}&slippage=1&disableEstimate=false`);
+      setValueExchangedDecimals(Number(`1E${tx.data.toToken.decimals}`));
+      setValueExchanged(tx.data.toTokenAmount);
+  }
+
+  
   async function get1inchSwap() {
     const tx = await axios.get(
-      // `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${value}&fromAddress=${walletAddress}&slippage=1&disableEstimate=false&gasPrice=25000000001`
-      `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=0x7761E2338B35bCEB6BdA6ce477EF012bde7aE611&toTokenAddress=0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE&amount=10000000000000000&fromAddress=0x127caE3A536527db86F583E97B4af51A1ECacc84&slippage=1&disableEstimate=false
-      `
-      );
+      `https://api.1inch.io/v5.0/43114/swap?fromTokenAddress=${fromToken}&toTokenAddress=${toToken}&amount=${value}&fromAddress=${walletAddress}&slippage=1&disableEstimate=false`);
       console.log(tx.data);
       setTo(tx.data.tx.to);
       setTxData(tx.data.tx.data);
-      setValueExchangedDecimals(Number(`1E${tx.data.toToken.decimals}`));
-      setValueExchanged(tx.data.toTokenAmount);
     }
-
+    
+    window.Approve = async () => { 
+      getConversion()
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      await provider.send('eth_requestAccounts', []);
+      const signer = provider.getSigner();
+  
+      const inputTokenContract = `${fromToken}`;
+      const oneInchContract = '0x1111111254EEB25477B68fb85Ed929f73A960582'
+    
+      const erc20Abi = ["function approve(address spender, uint256 amount) public returns (bool)"];
+      const inputToken = new ethers.Contract(inputTokenContract, erc20Abi, signer);
+      const inputAmount = value
+      const weiAmount = ethers.utils.parseEther(inputAmount)
+      const tx1 = await inputToken.approve(oneInchContract, weiAmount);
+      await tx1.wait();
+      get1inchSwap()
+      setSwapApproved(true)
+    }
 
   async function getBalance() {
     const ethers = require("ethers");
@@ -123,25 +140,17 @@ export default function Swap() {
         <div className="swap-content">
           <div className="input-box">
             <input
-              className="input-field"
-              onChange={(e) => changeValue(e)}
-              value={value / 1e18}
-              type="number"
-              min={0}
-              max={(balance.balance / 1e18).toFixed(3)}
-              placeholder={"0.0"}
+            className="input-field"
+            onChange={(e) => changeValue(e)}
+            value={value / 1e18}
+            type="number"
+            min={0}
+            max={(balance.balance / 1e18).toFixed(3)}
+            placeholder={"0.0"}
             ></input>
-            {/* <button className="input-btn">
-              <div className="input-inner-box">
-                <img className="input-logo" src={AVAXLogo} alt="Avalanche Logo" />
-                <p className="input-symbol" onChange={(e) => changeToToken(e)} value={fromToken}>
-                  {tokensJsonAvax[0].symbol}
-                </p>
-              </div>
-            </button> */}
             <button className="input-btn" onClick={handleListShow2}>
               <div className="input-inner-box">
-                {fromToken === "" && "Select Token"}
+                {fromToken === "" && "Tokens"}
                 {fromToken !== "" && (
                   <img 
                     src={tokensJsonAvax.find((token) => token.address === fromToken).logoURI}
@@ -159,26 +168,23 @@ export default function Swap() {
                   return (
                     <button className="dropdown-list2" key={idx} onClick={() => handleFromToken(token.address)}>
                       <img src={token.logoURI} alt="" />
-                      {token.symbol}
+                      <span className="token-symbol">{token.symbol}</span>
                     </button>
                   );
                 })}
             </span>
           </div>
-
-
-
-
           <div className="output-box">
             <input
               className="output-field"
               onChange={(e) => changeValue(e)}
               value={!valueExchanged ? "" : (valueExchanged / valueExchangedDecimals).toFixed(3)}
               placeholder={"0.0"}
+              disabled={true}
             ></input>
             <button className="output-btn" onClick={handleListShow}>
               <div className="output-inner-box">
-                {toToken === "" && "Select Token"}
+                {toToken === "" && "Tokens"}
                 {toToken !== "" && (
                   <img
                     src={tokensJsonAvax.find((token) => token.address === toToken).logoURI}
@@ -195,23 +201,17 @@ export default function Swap() {
                   return (
                     <button className="dropdown-list" key={idx} onClick={() => handleToToken(token.address)}>
                       <img src={token.logoURI} alt="" />
-                      {token.symbol}
+                      <span className="token-symbol">{token.symbol}</span>
                     </button>
                   );
                 })}
             </span>
           </div>
-
-
-
-
           <div className="button-containers">
-            <button className="conversion-btn" onClick={get1inchSwap}>
-              1 - Get Conversion
-            </button>
-            <button className="approve-btn" onClick={Approve}>2 - Approve Token</button>
-            <button className="swap-btn" disabled={false} onClick={sendTransaction}>
-              3 - Swap Tokens
+            <button className="approve-btn" onClick={window.Approve}>
+              1 - Approve Tokens</button>
+            <button className={swapApproved !== true ? "swap-btn" : "swap-btn-approved"} disabled={false} onClick={sendTransaction}>
+              2 - Swap Tokens
             </button>
           </div>
         </div>
@@ -236,7 +236,7 @@ export default function Swap() {
             <img src={STLogo} alt="" width={200} height={30} />
           </a>
         </div>
-     )}
+      )}
     </div>
   );
 }
