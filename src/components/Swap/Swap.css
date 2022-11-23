@@ -241,6 +241,19 @@ select {
   margin-bottom: 1em;
 }
 
+.approve-btn-approved {
+  width: 50%;
+  height: 40px;
+  text-align: center;
+  border-radius: 10px;
+  border: none;
+  background-color: rgba(83, 83, 83, 0.781);
+  color: white;
+  margin-top: 2em;
+  font-size: 15px;
+  pointer-events: none;
+}
+
 .approve-btn:hover {
   background-color: rgb(90, 90, 90);
   border: 1px solid whitesmoke;
@@ -256,6 +269,7 @@ select {
   background-color: rgba(83, 83, 83, 0.781);
   color: white;
   font-size: 15px;
+  pointer-events: none;
 }
 
 .swap-btn-approved {
@@ -267,6 +281,7 @@ select {
   background-color: #333;
   color: white;
   cursor: pointer;
+  margin-top: 0.5em;
   font-size: 15px;
 }
 
@@ -299,7 +314,7 @@ select {
     width: 80%;
   }
 
-  .conversion-btn,
+  .approve-btn,
   .swap-btn {
     width: 40%;
   }
@@ -308,6 +323,9 @@ select {
     width: 65% !important;
   }
   .dropdown-content {
+    width: 35%;
+  }
+  .dropdown-content2 {
     width: 35%;
   }
 }
@@ -332,7 +350,7 @@ select {
   .swap {
     height: 50%;
   }
-  .conversion-btn,
+  .approve-btn,
   .swap-btn {
     width: 50%;
   }
